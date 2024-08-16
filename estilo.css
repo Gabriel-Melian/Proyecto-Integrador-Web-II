@@ -1,0 +1,159 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /*General*/
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  .container {
+    max-width: 1800px;/*Ancho maximo del contenedor. Antes era 1200px*/
+    width: max-content;/*El contenedor se ajusta al contenido. Antes era width: 100%*/
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;/*Centro el texto*/
+  }
+  
+  h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+  
+  /*Productos*/
+  .productos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /*Creo 4 columnas de igual tamanio.*/
+    gap: 20px; /*Espacio entre columnas*/
+  }
+
+  .producto {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    margin-bottom: 20px;
+    /*overflow: hidden;*/
+    display: flex; /*Para ajustar al contenido*/
+  }
+  
+  .producto img {
+    width: 200px;
+    height: 250px;
+    max-width: 200px;
+    object-fit: contain;/*Ajusta la imagen al tamanio del contenedor*/
+  }
+  
+  .producto .info {
+    padding: 20px;
+  }
+  
+  .producto .titulo {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  
+  .producto .descripcion {
+    font-size: 0.9em;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  
+  .producto .descripcion:hover::after {
+    content: attr(data-description);
+    display: block;
+    position: absolute;
+    overflow: visible;
+    white-space: normal;
+    top: calc(100% + 5px);
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 999;
+}
+
+  .producto .categoria {
+    font-style: italic;
+    margin-bottom: 10px;
+  }
+  
+  .producto .precio {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: rgba(0, 0, 0, 0.8);
+    /*color: #007bff;*/
+  }
+  
+  /*Boton*/
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+  }
+  
+  .btn:hover {
+    background-color: #0056b3;
+  }
+
+/*Productos en oferta*/
+.en-oferta {
+  border: 2px solid #ff0000; /*Borde rojo*/
+  position: relative;
+}
+
+.en-oferta::before {
+  content: "En oferta"; /*Texto "En oferta"*/
+  background-color: #ff0000; /*Fondo rojo*/
+  color: #ffffff; /*Texto blanco*/
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 5px;
+}
+
+.precioOriginal {
+  font-size: 0.7em;
+  text-decoration: line-through;
+  font-weight: bold;
+  color: #555;
+}
+
+.carritoo img {
+  position: absolute;
+  left: 60px;
+  top: 30px;
+  max-height: 30px;
+  cursor: pointer;
+}
+
+/*Mensaje*/
+.mensaje {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+}
+
+.success {
+  background-color: #28a745;/*Verde*/
+}
+
+.error {
+  background-color: #dc3545;/*Rojo*/
+}

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="estiloCarrito.css">
+    
+    <title>Carrito del usuario</title>
+    
+</head>
+<body>
+    
+    <div class="contenedorCarrito">
+        <h1>Productos en el carrito</h1>
+
+        <!--Icono y mensaje para carrito vacio-->
+        <div id="carritoVacio" style="display: none;">
+            <img src="./imagenesWeb/BolsaCompras.png" width="100px" alt="Bolsa de compras">
+            <p>Suma productos a tu carrito para realizar una compra!</p>
+        </div>
+
+        <div id="contenido" class="contenido">
+
+        </div>
+
+        <h2 id="montoTotal" style="text-align: center; margin-top: 20px;"></h2>
+    </div>
+
+    <div class="home">
+        <a href="index.html">
+          <img src="./imagenesWeb/hogar.png" alt="pag principal">
+        </a>
+  
+    </div>
+
+    <div class="btnCompra">
+      <button class="comprar">Comprar</button>
+    </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {//DOMContentLoaded se dispara cuando el HTML ha sido cargado
+
+            const contenidoCarrito = document.getElementById('contenido');
+            const montoTotalElement = document.getElementById('montoTotal');
+            //el DOMContentLoaded hace que se refresque la pagina, impidiendo que se muestre el mensaje del boton comprar.
+            //alert('Carrito cargado');
+
+            function mostrarProductosEnCarrito(productos) {
+            contenidoCarrito.innerHTML = '';//Limpiar el carrito
+            let montoTotal = 0;
+
+            mostrarCarritoVacio();
+
+            if (productos.length === 0) {
+                document.querySelector('.comprar').style.display = 'none';
+                mostrarCarritoVacio();
+            } else {
+                document.querySelector('.comprar').style.display = 'block';
+            }
+
+                productos.forEach(producto => {
+                    //Creo elementos HTML
+                    const productoElement = document.createElement('div');
+                    productoElement.classList.add('producto');
+                    productoElement.innerHTML = `
+                        <img src="${producto.image}" alt="${producto.title}" class="imagen">
+                        <div class="info">
+                            <h2 class="titulo">${producto.title}</h2>
+                            <p class="categoria">Categoría: ${producto.category}</p>
+                            <p class="precio">
+                            ${producto.enOferta ? `<span class="precioOriginal" style="text-decoration: line-through; display: block;">$ ${producto.price}</span>` : ''}
+                            $${producto.enOferta ? `<span class="precioFinal"> ${producto.precioFinal}</span>` : ''} 
+                            ${producto.enOferta ? `<span class="descuento" style="color: #28A745; font-size: x-small;">${producto.descuento}% OFF</span>` : ''}
+                            </p>
+                            <input type="number" value="1" min="1" class="cantidad">
+                            <button class="eliminar">Eliminar</button>
+                        </div>
+                        `;
+
+                    //Agrego el elemento al contenedor
+                    contenidoCarrito.appendChild(productoElement);
+
+                    //Evento de eliminar
+                    const eliminarBtn = productoElement.querySelector('.eliminar');
+                    eliminarBtn.addEventListener('click', () => {
+                        eliminarProducto(producto.id);
+                    });
+
+                    //Evento de modificar la cantidad
+                    const cantidadInput = productoElement.querySelector('.cantidad');
+                    cantidadInput.addEventListener('change', () => {
+                        modificarCantidad(producto.id, parseInt(cantidadInput.value));
+                    });
+
+                    const precioTotalProducto = producto.enOferta ? producto.precioFinal * producto.cantidad : producto.price * producto.cantidad;
+                    montoTotal += precioTotalProducto;
+
+                });
+
+                //Evento de comprar
+                const comprarBtn = document.querySelector('.comprar');
+                    comprarBtn.addEventListener('click', () => {
+
+                        //Creo un array para almacenar los productos de la compra
+                        const productosCompra = [];
+
+                        //Itero sobre los productos en el carrito y los agrego al array
+                        productosEnCarrito.forEach(producto => {
+                            productosCompra.push({
+                                titulo: producto.title,
+                                precio: parseFloat(producto.enOferta ? producto.precioFinal : producto.price),
+                                cantidad: producto.cantidad
+                            });
+                            //console.log("Cantidad: " + producto.cantidad);
+                        });
+                        //Anteriormente, en precio, se parsea a float para que sea un numero y no un string.
+
+                        //Creo el objeto de datos a enviar al servidor
+                        const datosCompra = {
+                            idCompra: generarIdCompra(),
+                            productos: productosCompra,
+                            montoTotal: calcularMontoTotal(productosEnCarrito),
+                            fecha: obtenerFechaActual()
+                        };
+                        console.log('datos de compra:', datosCompra);
+                        
+                        //Realizar solicitud POST al servidor
+                        fetch('http://localhost:3000/compra', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(datosCompra)
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            }
+                            throw new Error('Error al guardar la compra');
+                        })
+                        .then(data => {
+                            console.log('Compra guardada correctamente:', data);
+                            vaciarCarrito();
+                            mostrarMensaje('Su compra se proceso correctamente', 'success');
+                        })
+                        .catch(error => {
+                            console.error('Error al guardar la compra:', error);
+                            mostrarMensaje('Hubo un error al procesar la compra. Por favor, intentelo de nuevo mas tarde.', 'error');
+                        });
+
+                    });
+
+                if (productos.length !== 0) {
+                    montoTotalElement.textContent = `Monto total: $${montoTotal.toFixed(2)}`;
+                } else {
+                    montoTotalElement.textContent = '';
+                }
+            }
+
+            //Funcion eliminar el producto del carrito
+            function eliminarProducto(id) {
+                const indice = productosEnCarrito.findIndex(producto => producto.id === id);
+                if (indice !== -1) {
+                    productosEnCarrito.splice(indice, 1);//Elimino el producto del array
+                    localStorage.setItem('carrito', JSON.stringify(productosEnCarrito));//Guardo el carrito actualizado
+                    mostrarProductosEnCarrito(productosEnCarrito);//Vuelvo a mostrar los productos en el carrito
+                    mostrarMensaje('Producto eliminado del carrito correctamente', 'success');
+                    mostrarCarritoVacio();
+                    actualizarCarrito();
+                }
+            }
+
+            //Funcion para modificar la cantidad de un producto en el carrito
+            function modificarCantidad(id, nuevaCantidad) {
+
+                //Encuentro el indice del producto
+                const indice = productosEnCarrito.findIndex(producto => producto.id === id);
+
+                //Si encuentro el producto en el carrito
+                if (indice !== -1) {
+                    //Actualizo la cantidad del producto
+                    productosEnCarrito[indice].cantidad = nuevaCantidad;
+
+                    //Actualizo el localStorage con la nueva cantidad
+                    localStorage.setItem('carrito', JSON.stringify(productosEnCarrito));
+
+                    //Encuentro el elemento HTML del producto
+                    const productoElement = document.querySelectorAll('.producto')[indice];
+
+                    //Aca agregue un span al precio original y el precio final para mostrarlos.
+                    if(productosEnCarrito[indice].enOferta) {
+                        productosEnCarrito[indice].cantidad = nuevaCantidad;
+
+                        //Ecuentro el elemento HTML del producto
+                        const productoElement = document.querySelectorAll('.producto')[indice];
+                        
+                        //Encuentro el elemento span que contiene el precio original
+                        const precioOriginalElement = productoElement.querySelector('.precioOriginal');
+                        
+                        //Actualizo el precio en el HTML de la oferta
+                        const precioFinal = productosEnCarrito[indice].precioFinal * nuevaCantidad;
+                        //console.log("precioFinal: " + precioFinal);
+                        precioOriginalElement.textContent = `$${productosEnCarrito[indice].price.toFixed(2)}`;
+
+                        //Obtengo el precioFinal por medio del span
+                        const precioFinalElement = productoElement.querySelector('.precioFinal');
+                        precioFinalElement.textContent = `${precioFinal.toFixed(2)}`;//Aca lo muestro con dos decimales
+
+                        //Muestro el precio original tachado
+                        precioOriginalElement.style.textDecoration = 'line-through';
+                        precioOriginalElement.style.display = 'block';
+                    }
+                    else {
+                        productosEnCarrito[indice].cantidad = nuevaCantidad;
+                        //Actualizo el precio en el HTML del producto comun
+                        const precioElement = productoElement.querySelector('.precio');
+                        const precio = productosEnCarrito[indice].price * nuevaCantidad;
+                        precioElement.textContent = `$${precio.toFixed(2)}`;
+                    }
+                    actualizarMontoTotal(productosEnCarrito);
+
+                }
+            }
+
+            function actualizarCarrito() {
+                const productosEnCarrito = JSON.parse(localStorage.getItem('carrito')) || [];
+
+                productosEnCarrito.forEach((producto, index) => {
+                    const cantidadInput = document.querySelectorAll('.cantidad')[index];
+                    if (cantidadInput) {
+                        cantidadInput.value = producto.cantidad;
+                    }
+                    modificarCantidad(producto.id, parseInt(cantidadInput.value));//Actualizo la cantidad
+                });
+                
+            }
+
+            //Obtengo los productos del carrito del localStorage del usuario
+            const productosEnCarrito = JSON.parse(localStorage.getItem('carrito')) || [];//|| [] para que no de error si no hay elementos
+            
+            //Muestro los productos al cargar la pagina
+            mostrarProductosEnCarrito(productosEnCarrito);
+            actualizarCarrito();
+
+            function mostrarCarritoVacio() {
+                const carritoVacio = document.getElementById('carritoVacio');
+                if (carritoVacio) {
+                    if (productosEnCarrito.length === 0) {
+                        carritoVacio.style.display = 'block';
+                    } else {
+                        carritoVacio.style.display = 'none';
+                    }
+                }
+            }
+
+            //Funcion que actualiza el monto total
+            function actualizarMontoTotal(productos) {
+                let montoTotal = 0;
+                productos.forEach(producto => {
+                    montoTotal += producto.enOferta ? producto.precioFinal * producto.cantidad : producto.price * producto.cantidad;
+                });
+                montoTotalElement.textContent = `Monto total: $${montoTotal.toFixed(2)}`;
+            }
+
+            //-Para la compra-
+            //Creo ID de compra aleatorio
+            function generarIdCompra() {
+                        return Math.floor(Math.random() * 1000) + 1;
+            }
+
+            //Funcion para calcular montoTotal
+            function calcularMontoTotal(productos) {
+                let montoo = 0;
+                productos.forEach(producto => {
+                    montoo += producto.enOferta ? producto.precioFinal * producto.cantidad : producto.price * producto.cantidad;
+                });
+                return parseFloat(montoo.toFixed(2));
+            }
+
+            //Funcion obtener fechaActual
+            function obtenerFechaActual() {
+                const fechaActual = new Date();
+                const year = fechaActual.getFullYear();
+                const month = String(fechaActual.getMonth() + 1).padStart(2, '0');//Agregar ceros a la izquierda si es necesario
+                const day = String(fechaActual.getDate()).padStart(2, '0');//Agregar ceros a la izquierda si es necesario
+                return `${day}/${month}/${year}`;
+            }
+
+            function vaciarCarrito() {
+            //Vaciar el carrito en el localStore
+            localStorage.removeItem('carrito');
+            
+            //Limpiar el contenido del carrito en el HTML
+            const contenidoCarrito = document.getElementById('contenido');
+            contenidoCarrito.innerHTML = '';
+
+            //Actualizar el monto total a cero
+            const montoTotalElement = document.getElementById('montoTotal');
+            montoTotalElement.textContent = '';
+
+            //Mostrar mensaje de carrito vacio
+            const carritoVacio = document.getElementById('carritoVacio');
+            carritoVacio.style.display = 'block';
+            
+            //Ocultar el boton de comprar
+            const comprarBtn = document.querySelector('.comprar');
+            comprarBtn.style.display = 'none';
+        }
+
+        //Funcion de mensaje
+        function mostrarMensaje(mensaje, tipo) {
+            //Creo el div para el mensaje
+            const mensajeElement = document.createElement('div');
+
+            //Asigno CSS segun el tipo de mensaje
+            mensajeElement.classList.add('mensaje', tipo);
+
+            //Agrego el texto
+            mensajeElement.textContent = mensaje;
+
+            //Agrego el elemento al DOM
+            document.body.appendChild(mensajeElement);
+
+            //Pasados 3 segundos, el mensaje desaparecera
+            setTimeout(() => {
+                mensajeElement.remove();
+            }, 3000);//3000 milisegundos = 3 segundos
+        }
+
+        });
+
+    </script>
+
+</body>
+</html>

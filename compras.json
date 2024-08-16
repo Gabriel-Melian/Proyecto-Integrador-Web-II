@@ -1,0 +1,46 @@
+[
+  {
+    "idCompra": 562,
+    "productos": [
+      {
+        "titulo": "Fjallraven - Mochila Foldsack No. 1, con capacidad para 15 portátiles",
+        "precio": 109.95,
+        "cantidad": 1
+      },
+      {
+        "titulo": "Chaqueta de algodón para hombre",
+        "precio": 55.99,
+        "cantidad": 2
+      },
+      {
+        "titulo": "Camisetas ajustadas premium informales para hombre",
+        "precio": 20.07,
+        "cantidad": 2
+      }
+    ],
+    "montoTotal": 262.07,
+    "fecha": "29/04/2024"
+  },
+  {
+    "idCompra": 883,
+    "productos": [
+      {
+        "titulo": "Fjallraven - Mochila Foldsack No. 1, con capacidad para 15 portátiles",
+        "precio": 109.95,
+        "cantidad": 1
+      },
+      {
+        "titulo": "Princesa chapada en oro blanco",
+        "precio": 8.49,
+        "cantidad": 2
+      },
+      {
+        "titulo": "Monitor de juegos curvo Samsung CHG90 de 49 pulgadas y 144 Hz (LC49HG90DMNXZA) – Pantalla súper ultraancha QLED",
+        "precio": 799.99,
+        "cantidad": 2
+      }
+    ],
+    "montoTotal": 1726.91,
+    "fecha": "29/04/2024"
+  }
+]

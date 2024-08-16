@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="estilo.css">
+
+    <title>Practico Integrador Web 2</title>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Lista de Productos</h1>
+        
+        <div id="productos" class="productos">
+          
+        </div>
+    </div>
+
+    <div class="carritoo">
+      <a href="carrito.html">
+        <img src="./imagenesWeb/Carrito.png" alt="carrito de compras">
+      </a>
+
+    </div>
+
+    <script>
+      //Funcion para obtener los productos y las ofertas
+      function obtenerProductosYOfertas() {
+        let productos = [];//Aca voy a guardar los productos con y sin ofertas
+
+        //Obtengo los productos
+        fetch("https://fakestoreapi.com/products")//Primera promesa
+          .then(response => {
+            //Comprueba si la respuesta HTTP es exitosa (codigo 200)
+            if (!response.ok) {
+              throw new Error('La solicitud no fue exitosa');
+            }
+            //Convierte la respuesta en formato JSON
+            return response.json();
+          })
+          .then(datos => {
+            //Agregar productos al arreglo
+            productos = datos;
+
+            //Obtengo las ofertas
+            return fetch("http://localhost:3000/ofertas");//Segunda promesa
+          })
+          .then(response => response.json())//Convierte la respuesta en formato JSON. Obtengo objetos de javascript.
+          .then(ofertas => {
+            //Itero sobre las ofertas y actualizo los productos
+            ofertas.forEach(oferta => {
+              const productoIndex = productos.findIndex(producto => producto.id === oferta.id);//Busco ID del producto en oferta
+              if (productoIndex !== -1) {//Si el producto existe, agrego el booleano de enOferta, descuento y precio final
+                const producto = productos[productoIndex];
+                producto.enOferta = true;
+                producto.precioFinal = (producto.price - (oferta.descuento / 100 * producto.price)).toFixed(2);
+                producto.descuento = oferta.descuento;
+              }
+            });
+            
+            mostrarProductos(productos);
+          })
+          .catch(error => console.error('Error al obtener datos:', error));
+      }
+      
+      //Funcion para mostrar los productos en la interfaz
+      function mostrarProductos(productos) {
+        const productosContainer = document.getElementById('productos');
+
+        //Limpio el contenedor
+        productosContainer.innerHTML = '';
+
+        //Itero sobre los productos
+        Promise.all(productos.map(producto => {//Promise sirve para que se hagan todas las promesas al mismo tiempo
+          //Envia solicitud de traduccion para titulo, descripcion y categoria.
+          return fetch('http://localhost:3000/traducir', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              titulo: producto.title,
+              descripcion: producto.description,
+              categoria: producto.category
+            })
+          })
+          .then(response => response.json())
+          .then(traducciones => {
+            //Asigno las traducciones a los atributos para que en el carrito 
+            //también se muestren los productos traducidos
+            producto.title = traducciones.title;
+            producto.description = traducciones.description;
+            producto.category = traducciones.category;
+          });
+        })).then(() => {
+          //Una vez que se completen las traducciones, se ordena por ID.
+          productos.sort((a, b) => a.id - b.id);
+
+          //Itero sobre los productos para crear su div HTML y agregarles su clase
+          productos.forEach(producto => {
+            const productoElement = document.createElement('div');
+            productoElement.classList.add('producto');
+            if (producto.enOferta) {
+              productoElement.classList.add('en-oferta');
+            }
+
+            //Genero el HTML del producto con los datos traducidos
+            productoElement.innerHTML = `
+              <img src="${producto.image}" alt="${producto.title}">
+              <div class="info">
+                <h2 class="titulo">${producto.title}</h2>
+                <p class="descripcion" data-description="${producto.description}">${producto.description.substring(0, 27) + '...'}</p>
+                <p class="categoria">Categoría: ${producto.category}</p>
+                <p class="precio">
+                  ${producto.enOferta ? `<span class="precioOriginal" style="text-decoration: line-through; display: block;">$ ${producto.price}</span>` : ''}
+                  $${producto.enOferta ? producto.precioFinal : producto.price} 
+                  ${producto.enOferta ? `<span class="descuento" style="color: #28A745; font-size: x-small;">${producto.descuento}% OFF</span>` : ''}
+                </p>
+                <button class="btn">Agregar al carrito</button>
+              </div>
+            `;
+
+            //Agrego el producto al contenedor
+            productosContainer.appendChild(productoElement);
+
+            //Agrego el evento de clic al botón de agregar al carrito
+            const boton = productoElement.querySelector('.btn');
+            boton.addEventListener('click', () => {
+              agregarProductoAlCarrito(producto);
+            });
+          });
+        })
+        .catch(error => console.error('Error al obtener traducción:', error));
+      }
+
+        function agregarProductoAlCarrito(producto) {//LocalStorage
+          //Los datos almacenados en el localstorage se guardan en formato cadenas de texto, no en formato JSON.
+          let carrito = JSON.parse(localStorage.getItem('carrito')) || [];//Obtengo el carrito del localStorage (si existe)
+
+          //Buscar si el producto ya esta en el carrito
+          const indice = carrito.findIndex(item => item.id === producto.id);
+
+          if (indice !== -1) {
+            //Si el producto ya esta en el carrito, incremento la cantidad
+            carrito[indice].cantidad++;
+          } else {
+            //Si el producto no esta en el carrito, agregarlo con cantidad 1
+            producto.cantidad = 1;
+            carrito.push(producto);
+          }
+
+          localStorage.setItem('carrito', JSON.stringify(carrito));//stringify para convertir el objeto en una cadena de texto
+
+          mostrarMensaje('Producto Agregado al carrito correctamente', 'success');
+          //localStorage.clear();//Sirve para limpiar el localStorage
+        }
+
+        //Funcion de mensaje
+        function mostrarMensaje(mensaje, tipo) {
+            //Creo el div para el mensaje
+            const mensajeElement = document.createElement('div');
+
+            //Asigno CSS segun el tipo de mensaje
+            mensajeElement.classList.add('mensaje', tipo);
+
+            //Agrego el texto
+            mensajeElement.textContent = mensaje;
+
+            //Agrego el elemento al DOM
+            document.body.appendChild(mensajeElement);
+
+            //Pasados 3 segundos, el mensaje desaparecera
+            setTimeout(() => {
+                mensajeElement.remove();
+            }, 3000);//3000 milisegundos = 3 segundos
+        }
+        
+
+      //window.onload hace que la función se ejecute al cargar la pagina
+      window.onload = obtenerProductosYOfertas;
+    </script>
+
+
+</body>
+</html>
