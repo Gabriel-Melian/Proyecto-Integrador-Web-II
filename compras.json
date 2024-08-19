@@ -42,5 +42,22 @@
     ],
     "montoTotal": 1726.91,
     "fecha": "29/04/2024"
+  },
+  {
+    "idCompra": 962,
+    "productos": [
+      {
+        "titulo": "Chaqueta de algodón para hombre",
+        "precio": 55.99,
+        "cantidad": 1
+      },
+      {
+        "titulo": "Camisetas ajustadas premium informales para hombre",
+        "precio": 20.07,
+        "cantidad": 1
+      }
+    ],
+    "montoTotal": 76.06,
+    "fecha": "19/08/2024"
   }
 ]

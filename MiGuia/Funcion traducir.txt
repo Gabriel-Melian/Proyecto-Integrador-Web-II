@@ -1,0 +1,117 @@
+//Traducir sin PromiseAll(). Hace que los productos no puedan ordenarse con productos.sort((a, b) => a.id - b.id);
+/*function mostrarProductos(productos) {
+        const productosContainer = document.getElementById('productos');
+        
+        //Limpio contenedor
+        productosContainer.innerHTML = '';
+
+        productos.forEach(producto => {
+          //Envia la solicitud de traducción para el titulo, descripcion y categoria 
+          fetch('http://localhost:3000/traducir', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              titulo: producto.title,
+              descripcion: producto.description,
+              categoria: producto.category
+            })
+          })
+          .then(response => response.json())
+          .then(traducciones => {
+            //Creo el elemento html para el producto
+            const productoElement = document.createElement('div');
+            productoElement.classList.add('producto');
+            //Asigno las traducciones a los atributos para que en el carrito 
+            //tambien se muestren los productos traducidos
+            producto.title = traducciones.title;
+            producto.description = traducciones.description;
+            producto.category = traducciones.category;
+            
+            if (producto.enOferta) {
+              productoElement.classList.add('en-oferta');
+            }
+            //console.log("ProductosID:", producto.id);
+
+            //Genero el HTML del producto con los datos traducidos
+            productoElement.innerHTML = `
+              <img src="${producto.image}" alt="${producto.titulo}">
+              <div class="info">
+                <h2 class="titulo">${producto.title}</h2>
+                <p class="descripcion" data-description="${producto.description}">${producto.description.substring(0, 27) + '...'}</p>
+                <p class="categoria">Categoría: ${producto.category}</p>
+                <p class="precio">
+                  ${producto.enOferta ? `<span class="precioOriginal" style="text-decoration: line-through; display: block;">$ ${producto.price}</span>` : ''}
+                  $${producto.enOferta ? producto.precioFinal : producto.price} 
+                  ${producto.enOferta ? `<span class="descuento" style="color: #28A745; font-size: x-small;">${producto.descuento}% OFF</span>` : ''}
+                </p>
+                <button class="btn">Agregar al carrito</button>
+              </div>
+            `;
+            
+            //Agrego el producto al div contenedor
+            productosContainer.appendChild(productoElement);
+
+            //Agrego el evento de click al boton de agregar al carrito
+            const boton = productoElement.querySelector('.btn');
+            boton.addEventListener('click', () => {
+              agregarProductoAlCarrito(producto);
+            });
+          })
+          .catch(error => console.error('Error al obtener traducción:', error));
+        });
+      }*/
+
+
+
+//Sin traduccion
+function mostrarProductos(productos) {
+        const productosContainer = document.getElementById('productos');
+
+        //Limpio el contenedor de productos
+        productosContainer.innerHTML = '';
+
+        //Mostrar cada producto en el contenedor
+        productos.forEach(producto => {
+          const productoElement = document.createElement('div');
+          productoElement.classList.add('producto');
+          if (producto.enOferta) {
+            productoElement.classList.add('en-oferta');
+          }
+          
+          //Genero el HTML del producto
+          productoElement.innerHTML = `
+            <img src="${producto.image}" alt="${producto.title}">
+            <div class="info">
+              <h2 class="titulo">${producto.title}</h2>
+              <p class="descripcion" data-description="${producto.description}">${producto.description.substring(0, 27) + '...'}</p>
+              <p class="categoria">Categoría: ${producto.category}</p>
+              <p class="precio">
+              ${producto.enOferta ? `<span class="precioOriginal" style="text-decoration: line-through; display: block;">$ ${producto.price}</span>` : ''}
+              $${producto.enOferta ? producto.precioFinal : producto.price} 
+              ${producto.enOferta ? `<span class="descuento" style="color: #28A745; font-size: x-small;">${producto.descuento}% OFF</span>` : ''}
+              </p>
+              <button class="btn">Agregar al carrito</button>
+            </div>
+          `;
+          
+          //Agrego el producto al contenedor
+          productosContainer.appendChild(productoElement);
+        });
+
+        //Evento de clic a los botones de agregar al carrito
+        const botones = productosContainer.querySelectorAll('.btn');
+        botones.forEach((boton, index) => {
+          boton.addEventListener('click', () => {
+            
+            //Obtengo el producto asociado al boton
+            const producto = productos[index];
+            
+            agregarProductoAlCarrito(producto);
+
+          });
+        });
+        
+        }
+
